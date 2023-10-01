@@ -3,9 +3,9 @@ package ipcalcs
 /******************************************************************************
 * ipcalcs
 *
-* Short bunch of functions that help me convert wacky ipv4 representations to
-* More useful representations, to enable things like doing math on IPs and
-* shit. Helps a lot with stratified random sampling method for net discovery.
+* Functions that help convert wacky ipv4 representations, to enable things like 
+* doing math on IPs and shit. Helps a lot with stratified random sampling 
+* method for net discovery we do in NetscanX.
 * Key:
 * IpStoH(): STRING to HEX, since raw hex would be the easiest to wrangle.
 * IpStoI(): STRING to net.IP
@@ -51,8 +51,10 @@ func IpStoH(ip string) uint32 {
 }
 
 /* Convert IP string to IP (as defined in net.IP, a slice of) */
-func IpStoI(ip string) net.IP {
-	return net.IP{0xfc, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+func IpStoI(ip string) net.IPv4 {
+	ipparts := strings.Split(ip, ".")
+	return net.IPv4{ipparts[4], ipparts[3], ipparts[2], ipparts[1]}
+	// return net.IP{0xfc, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 }
 
 func StringToUint32(s string) (uint32, bool) {
