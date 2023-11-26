@@ -1,3 +1,3 @@
-module megaohm.net/ipcalcs
+module github.com/Mega0hm/ipcalcs
 
 go 1.20
