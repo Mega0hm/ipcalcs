@@ -34,7 +34,7 @@ func IpStoH(ip string) uint32 {
 	var result uint32 = 0
 	var bs uint32 = 0
 	j := 0 //uh, dude... .sdrawkcab s'tihS LOL - no, really. strings.Split arranges our IP elements
-	// backwards. Great. So I need the j counter to run the list in fucking retrograde.
+	// backwards. Great. So I need the j counter to run the list in fucking retrograde. Yahp.
 	for i := 3; i >= 0; i-- {
 		//fmt.Printf("Iteration %d: Value: %s", i, ipparts[i]) //DEBUG
 		quad, ok := StringToUint32(ipparts[i])

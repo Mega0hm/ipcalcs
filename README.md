@@ -17,6 +17,5 @@ ipcalcs is a network utility package of Go functions that help convert wacky ipv
 *Copyright © 2023 CT Geigner, All rights reserved*
 *Free to use under GNU GPL v2, see https://github/Mega0hm/ipcalcs/LICENSE.md*
    
-Written for use with Netscanx, but possibly plenty useful for other stuff.
-   
+Written for use with Netscanx.  
 *--ctg 26NOV2023*
