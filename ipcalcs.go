@@ -24,30 +24,33 @@ import (
 	"strings"
 )
 
-/* IP string-to-hexvalue */
-func IpStoH(ip string) uint32 {
+/*
+IPv4StoH()
+Convert IPv4 string to hexvalue 0x0 - 0xFFFFFFFF
+
+Call with input string, or net.IP.String()
+*/
+func IPv4StoH(ip string) (uint32, error) {
 	/* un-string-ify all parts of this mess.
 	   Then assemble as a hexval.
 	   And who tf thought dots and shit was a good idea? Made ipv4 some mixed-up bullshit.
 	   Anyway, undo that. */
 	ipparts := strings.Split(ip, ".")
 	var result uint32 = 0
-	var bs uint32 = 0
-	j := 0 //uh, dude... .sdrawkcab s'tihS LOL - no, really. strings.Split arranges our IP elements
-	// backwards. Great. So I need the j counter to run the list in fucking retrograde. Yahp.
+	var bs int = 0
+	var j = 0 // uh, dude... .sdrawkcab s'tihS LOL - no, really. strings.Split arranges our IP elements
+	          // backwards. Great. So I need the j counter to run the list in fucking retrograde. Yahp.
 	for i := 3; i >= 0; i-- {
-		//fmt.Printf("Iteration %d: Value: %s", i, ipparts[i]) //DEBUG
 		quad, ok := StringToUint32(ipparts[i])
 		if !ok || quad > 255 || len(ipparts) != 4 { // FAIL on: Nan, invalid num, too many/few parts
-			fmt.Printf("\nERROR: %s is not a valid IP.\n", ip)
-			return 0x0
+			err := fmt.Errorf("%s is not a valid IPv4 address", ip)
+			return 0x0, err
 		}
-		bs = uint32(j) * 8
+		bs = j * 8
 		j++
 		result = result + quad<<bs // bitshift it left and add to result
-		//fmt.Printf("Bit shift is %d,\tConverterd Number is: %X\t Result is 0x%x\n", bs, quad<<bs, result) //DEBUG
 	}
-	return result
+	return result, nil  // range: 0-4294967295
 }
 
 /* Convert IPv4 string to IPv6  (type net.IP, as defined in net.IP) */
@@ -55,9 +58,26 @@ func IpStoI(ip string) net.IP {
 	return net.ParseIP(ip)
 }
 
+/******************************************************************************
+CIDRRead()
+A small addon to net.ParseCIDR that also returns the mask as an unsigned int
+We're relying on net.ParseCIDR to catch anything hinky before we split the input
+and convert the mask string to a real number.
+******************************************************************************/ 
+func CIDRRead(s string) (net.IP, *net.IPNet, uint32) {
+	ip, ipn, err := net.ParseCIDR(s)
+	if err != nil {
+		fmt.Println(err.Error())
+		return net.IP{0,0,0,0}, nil, 0
+	} 
+	ms := strings.Split(s, "/")
+	mask, _ := StringToUint32(ms[0])
+	return ip, ipn, mask
+
+}
+
 func StringToUint32(s string) (uint32, bool) {
-	// fmt.Printf("\nDEBUG (stringToUint32) :: INPUT Item: %s", s) // DEBUG
-	isnum := false // Validate: "Is the input string a valid numeric representation?"
+	var isnum = false // Validate: "Is the input string a valid numeric representation?"
 	var num uint32 = 0
 	slen := len([]rune(s))
 	for i := slen - 1; i >= 0; i-- { // Walk the chars of the input string, validate each.
@@ -67,20 +87,17 @@ func StringToUint32(s string) (uint32, bool) {
 			break         // ...break outta here.
 		} else { // When char is 0-9, go convert it.
 			isnum = true
-			var mlt int32 = 1
-			// fmt.Printf("\nDEBUG (stringToUint32) ::\n\tNum char: %c", char) // DEBUG
+			var mult int32 = 1 
 			if char != '0' { // For non-zero numbers represented:
 				digit := slen - 1 - i        // ...work through chars L->R... (len-1-i is most signif. digit L->R)
 				for j := digit; j > 0; j-- { // ...first note correct pow10 multiplier for the position of the number...
-					mlt = mlt * 10 // [NOTE ON WHY: This is computationally less expensive than using math.Pow10 and float64s, that's why.]
+					mult = mult * 10 // [NOTE ON WHY NOT math.Pow10: That uses float64- this is, I think, computationally less expensive.]
 				}
-				// fmt.Printf(" multiplied by %d (x10^%d)", mlt, digit) // DEBUG
-				num = num + uint32((int32(char)-48)*mlt) // ...then solve for current column and update total.
-				// fmt.Printf(", totaling %d\n", num)        // DEBUG
+				num = num + uint32((int32(char)-48)*mult) // ...then solve for current column and update total.
 			}
 		}
 	}
-	if isnum == false {
+	if !isnum {
 		return 0x00, false // NaN:  Return IPADDR "0" and failure.
 	} else {
 		return num, true // GOOD: Return IPADDR and success
